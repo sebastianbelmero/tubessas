@@ -1,12 +1,35 @@
-# Install DNS Server 192.168.8.102 && kelompok5proxy.com
+IP : 191.168.8.102
+reverse : 8.168.192
+link : aspal.com
+
+email : sebastian
+password : sebastian123
+
+mysql : server
+password : server123
+
+konfigurasi apache
+utama : website1.conf
+email : website2.conf
+
+ftp
+username : ftpuser
+
+# Install DNS Server
 login superuser
 ```
 sudo su
 ```
-allow port 53 pada server
+
 ```
 apt install bind9
 ```
+
+allow port 53 pada server
+```
+ufw allow 53
+```
+
 konfigurasi IP secara static
 ```
 nano /etc/netplan/00-installer-config.yaml
@@ -18,36 +41,39 @@ network:
   ethernets:
     enp0s3:
       dhcp4: false
-      addresses: [192.168.22.254/24]
-      gateway4: 192.168.22.1
+      addresses: [192.168.8.102/24]
+      gateway4: 192.168.8.1
       nameservers:
         search: [aspal.com]
-        addresses: [192.168.22.254, 192.168.22.1]
+        addresses: [192.168.8.102, 192.168.8.1]
   version: 2
 ```
 
 Konfigurasi Resolv.conf
+
 ```
 nano /etc/resolv.conf
 ```
+
 ```
-nameserver 192.168.22.254
-nameserver 192.168.22.1
+nameserver 192.168.8.102
+nameserver 192.168.8.1
 options edns0
 search aspal.com
 ```
 
 konfigurasi host
+
 ```
 nano /etc/hosts
 ```
+
 ```
-127.0.0.1 localhost
-127.0.1.1 srv1
-192.168.22.254  aspal.com
+192.168.8.102  aspal.com
 ```
 
 tambahkan zone pada primary server
+
 ```
 nano /etc/bind/named.conf.local
 ```
@@ -60,6 +86,7 @@ zone "aspal.com" {
 ```
 
 buat data file dengan cara copy template yang sudah ada
+
 ```
 cp /etc/bind/db.local /etc/bind/db.aspal
 ```
@@ -81,11 +108,11 @@ $TTL    604800
                          604800 )       ; Negative Cache TTL
 ;
 @       IN      NS      ns.aspal.com.
-@       IN      A       192.168.22.254
+@       IN      A       192.168.8.102
 @       IN      MX      10      mail.aspal.com.
-ns      IN      A       192.168.22.254
+ns      IN      A       192.168.8.102
 www     IN      CNAME   ns
-mail    IN      A       192.168.22.254
+mail    IN      A       192.168.8.102
 ```
 
 restart bind9
@@ -95,17 +122,13 @@ systemctl restart bind9
 ```
 
 buat reverse zone
+
 ```
 nano /etc/bind/named.conf.local
 ```
 
 ```
-zone "aspal.com" {
-        type master;
-        file "/etc/bind/db.aspal";
-};
-
-zone "22.168.192.in-addr.arpa" {
+zone "8.168.192.in-addr.arpa" {
         type master;
         file "/etc/bind/db.192";
 };
@@ -146,6 +169,10 @@ systemctl restart bind9
 DNS Caching berfungsi jika Client menggunakan DNS Local dan ingin terhubung dengan Internet. jadi PC Client masih bisa terhubung ke Internet meskipun Client menggunakan DNS Local.
 
 ```
+nano /etc/bind/named.conf.options
+```
+
+```
 forwarders {
         8.8.8.8;
         8.8.4.4;
@@ -172,8 +199,8 @@ ping aspal.com
 allow apache
 ```
 sudo ufw allow in "Apache"
+sudo ufw allow in "Apache Full"
 ```
-
 
 ### Install MYSQL
 ```
@@ -187,35 +214,6 @@ sudo mysql_secure_installation
 ```
 ```
 y -> 0 -> y -> y -> y -> y -> y
-```
-
-
-
-### Install PHP
-install php dll
-```
-apt install php php-fpm php-mysql libapache2-mod-php
-```
-
-jalankan php-fpm
-```
-systemctl start php7.4-fpm
-```
-
-```
-a2enmod proxy_fcgi setenvif
-```
-
-```
-systemctl restart apache2
-```
-
-```
-a2enconf php7.4-fpm
-```
-
-```
-systemctl reload apache2
 ```
 
 ### Setting MYSQL
@@ -300,7 +298,7 @@ mv startbootstrap-landing-page-gh-pages/ website1
 cd /etc/apache2/sites-available/
 ```
 ```
-touch website1.conf
+touch website1.conf website2.conf
 ```
 
 ```
@@ -312,7 +310,22 @@ nano website1.conf
         ServerName aspal.com
         ServerALias www.aspal.com
         ServerAdmin webmaster@aspal.com
-        DocumentRoot /var/www/html/website1
+        DocumentRoot /var/www/html
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+```
+
+```
+nano website2.conf
+```
+
+```
+<VirtualHost *:80>
+        ServerName aspal.com
+        ServerALias mail.aspal.com
+        ServerAdmin webmaster@aspal.com
+        DocumentRoot /var/www/html/squirrelmail
         ErrorLog ${APACHE_LOG_DIR}/error.log
         CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
@@ -320,6 +333,7 @@ nano website1.conf
 
 ```
 a2ensite website1.conf
+a2ensite website2.conf
 ```
 
 ```
@@ -335,7 +349,6 @@ install beberapa dependencies
 ```
 sudo apt -y install software-properties-common
 sudo apt -y install python3-software-properties
-sudo apt -y install python-software-properties
 ```
 
 tambahkan repo PHP
@@ -353,23 +366,10 @@ sudo locale-gen id_ID.UTF-8
 ```
 
 ```
-apt -y install apache2 php php-xmlrpc php-mysql php-gd php-cli
-```
-
-```
-apt -y install php-curl dovecot-common dovecot-imapd
-```
-
-```
-apt -y install php5.6 php5.6-mysql php5.6-mbstring php-mbstring
-```
-
-```
-apt -y install php-xdebug libapache2-mod-php5.6 libapache2-mod-php
-```
-
-```
-apt -y install postfix
+apt -y install apache2 php php-xmlrpc php-mysql php-gd php-cli \
+php-curl dovecot-common dovecot-imapd \
+dovecot-pop3d postfix php-mbstring \
+php-xdebug libapache2-mod-php unzip
 ```
 
 ```
@@ -379,38 +379,49 @@ smtp.telkom.net
 ```
 
 ```
-systemctl restart postfix
-```
-
-```
-apt - install dovecot-imapd dovecot-pop3d
-```
-
-```
-systemctl restart dovecot
-```
-
-```
-wget https://sourceforge.net/projects/squirrelmail/files/stable/1.4.22/squirrelmail-webmail-1.4.22.zip
-apt -y install unzip
+cd /usr/local/src
+git clone https://github.com/RealityRipple/squirrelmail
 unzip squirrelmail-webmail-1.4.22.zip
-mv squirrelmail-webmail-1.4.22 /var/www/html/
-mv /var/www/html/squirrelmail-webmail-1.4.22/ /var/www/html/squirrelmail
-chown -R www-data:www-data /var/www/html/squirrelmail/
-chmod 755 -R /var/www/html/squirrelmail/
+mv squirrelmail-webmail-1.4.22 /var/www/html/squirrelmail/
+mkdir -p /var/local/squirrelmail/data
+chown -Rf www-data: /var/local/squirrelmail/
+chmod -Rf 777 /var/local/squirrelmail/
 ```
 
 ```
-sudo perl /var/www/html/squirrelmail/config/conf.pl
+cd /var/www/html/squirrelmail/
+```
+
+```
+./configure
 ```
 
 2 -> 1 -> aspal.com -> s -> q
 
 ```
-sudo useradd myusername
+service dovecot restart
+/etc/init.d/apache2 restart
+/etc/init.d/postfix restart
 ```
 
+menambahkan email
 
+```
+useradd myusername
+```
+
+```
+passwd myusername
+```
+
+```
+mkdir -p /var/www/html/myusername
+usermod -m -d /var/www/html/myusername myusername
+```
+
+```
+chown -R myusername:myusername /var/www/html/myusername
+```
 
 
 
@@ -418,3 +429,97 @@ sudo useradd myusername
 ```
 https://devanswers.co/install-ftp-server-vsftpd-ubuntu-20-04/
 ```
+
+```
+apt install vsftpd
+```
+
+```
+systemctl start vsftpd
+```
+
+```
+ufw allow 20/tcp
+ufw allow 21/tcp
+ufw allow 40000:50000/tcp
+ufw allow 990/tcp
+```
+
+```
+adduser ftpuser
+```
+
+```
+nano /etc/ssh/sshd_config
+```
+
+```
+DenyUsers ftpuser
+```
+
+```
+systemctl restart sshd
+```
+
+### Upload ke Web Server
+
+```
+usermod -d /var/www ftpuser
+chown ftpuser:ftpuser /var/www/html
+```
+
+### Uplaod ke Folder Home
+```
+mkdir /home/ftpuser/ftp
+chown nobody:nogroup /home/ftpuser/ftp
+chmod a-w /home/ftpuser/ftp
+mkdir /home/ftpuser/ftp/files
+chown ftpuser:ftpuser /home/ftpuser/ftp/files
+```
+
+### Konfigurasi vsftpd
+```
+mv /etc/vsftpd.conf /etc/vsftpd.conf.bak
+```
+
+```
+nano /etc/vsftpd.conf
+```
+
+```
+listen=NO
+listen_ipv6=YES
+anonymous_enable=NO
+local_enable=YES
+write_enable=YES
+local_umask=022
+dirmessage_enable=YES
+use_localtime=YES
+xferlog_enable=YES
+connect_from_port_20=YES
+chroot_local_user=YES
+secure_chroot_dir=/var/run/vsftpd/empty
+pam_service_name=vsftpd
+force_dot_files=YES
+pasv_min_port=40000
+pasv_max_port=50000
+```
+
+```
+user_sub_token=$USER
+local_root=/home/$USER/ftp
+```
+
+```
+systemctl restart vsftpd
+```
+
+
+# Proxy Server
+acl badurl dstdomain .aspal.com
+acl pagi time MTWHF 08:30-12:00
+acl siang time MTWHF 13:30-17:00
+acl malam time MTWHF 00:00-03:00
+http_access deny badurl pagi
+http_access deny badurl siang
+http_access allow badurl malam
