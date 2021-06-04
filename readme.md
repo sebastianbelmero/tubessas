@@ -1,21 +1,27 @@
-IP : 191.168.8.102
+IP : 192.168.8.104
 reverse : 8.168.192
-link : aspal.com
+link : kelompok5proxy.com
 
-email : sebastian
-password : sebastian123
+email : server
+password : server123
 
 mysql : server
 password : server123
 
 konfigurasi apache
-utama : website1.conf
-email : website2.conf
+utama : website.conf
+email : squirrelmail.conf
 
 ftp
 username : ftpuser
 
 IP client : 192.168.8.101
+
+ANGGI YOHANES PARDEDE 191402143
+DANIEL SITUMEANG 191402140
+GEYLFEDRA MATTHEW PANGGABEAN 191402065
+MEILY BENEDICTA HAREFA 191402053
+SEBASTIAN BELMERO SITORUS 191402113
 
 # Install DNS Server
 login superuser
@@ -43,11 +49,11 @@ network:
   ethernets:
     enp0s3:
       dhcp4: false
-      addresses: [192.168.8.102/24]
+      addresses: [192.168.8.104/24]
       gateway4: 192.168.8.1
       nameservers:
-        search: [aspal.com]
-        addresses: [192.168.8.102, 192.168.8.1]
+        search: [kelompok5proxy.com]
+        addresses: [192.168.8.104, 192.168.8.1]
   version: 2
 ```
 
@@ -58,10 +64,10 @@ nano /etc/resolv.conf
 ```
 
 ```
-nameserver 192.168.8.102
+nameserver 192.168.8.104
 nameserver 192.168.8.1
 options edns0
-search aspal.com
+search kelompok5proxy.com
 ```
 
 konfigurasi host
@@ -71,7 +77,7 @@ nano /etc/hosts
 ```
 
 ```
-192.168.8.102  aspal.com
+192.168.8.104  kelompok5proxy.com
 ```
 
 tambahkan zone pada primary server
@@ -81,7 +87,7 @@ nano /etc/bind/named.conf.local
 ```
 
 ```
-zone "aspal.com" {
+zone "kelompok5proxy.com" {
         type master;
         file "/etc/bind/db.aspal";
 };
@@ -102,19 +108,19 @@ nano /etc/bind/db.aspal
 ; BIND data file for PT.Aspal
 ;
 $TTL    604800
-@       IN      SOA     ns.aspal.com. root.aspal.com. (
+@       IN      SOA     ns.kelompok5proxy.com. root.kelompok5proxy.com. (
                               2         ; Serial
                          604800         ; Refresh
                           86400         ; Retry
                         2419200         ; Expire
                          604800 )       ; Negative Cache TTL
 ;
-@       IN      NS      ns.aspal.com.
-@       IN      A       192.168.8.102
-@       IN      MX      10      mail.aspal.com.
-ns      IN      A       192.168.8.102
+@       IN      NS      ns.kelompok5proxy.com.
+@       IN      A       192.168.8.104
+@       IN      MX      10      mail.kelompok5proxy.com.
+ns      IN      A       192.168.8.104
 www     IN      CNAME   ns
-mail    IN      A       192.168.8.102
+mail    IN      A       192.168.8.104
 ```
 
 restart bind9
@@ -151,17 +157,17 @@ nano /etc/bind/db.192
 ; BIND reverse data file for PT.Aspal
 ;
 $TTL    604800
-@       IN      SOA     ns.aspal.com. root.aspal.com. (
+@       IN      SOA     ns.kelompok5proxy.com. root.kelompok5proxy.com. (
                               2         ; Serial
                          604800         ; Refresh
                           86400         ; Retry
                         2419200         ; Expire
                          604800 )       ; Negative Cache TTL
 ;
-@       IN      NS      ns.aspal.com.
-1       IN      PTR     ns.aspal.com.
-1       IN      PTR     www.aspal.com
-1       IN      PTR     mail.aspal.com
+@       IN      NS      ns.kelompok5proxy.com.
+1       IN      PTR     ns.kelompok5proxy.com.
+1       IN      PTR     www.kelompok5proxy.com
+1       IN      PTR     mail.kelompok5proxy.com
 ```
 
 ```
@@ -188,31 +194,149 @@ systemctl restart bind9
 tes
 
 ```
-nslookup www.aspal.com
+nslookup www.kelompok5proxy.com
 ```
 
 ```
-ping aspal.com
+ping kelompok5proxy.com
 ```
+
+# Install Mail Server (squirrelmail)
+
+install beberapa dependencies
+```
+apt -y install software-properties-common python3-software-properties
+```
+
+tambahkan repo PHP
+```
+add-apt-repository ppa:ondrej/php
+```
+
+update repo
+```
+apt-get update
+```
+
+```
+locale-gen id_ID.UTF-8
+```
+
+```
+apt -y install apache2 php php-xmlrpc php-mysql php-gd php-cli \
+php-curl dovecot-common dovecot-imapd \
+dovecot-pop3d postfix php-mbstring \
+php-xdebug libapache2-mod-php unzip
+```
+
+```
+internet with smarthost
+kelompok5proxy.com
+smtp.telkom.net
+```
+
+```
+cd /usr/local/src
+git clone https://github.com/RealityRipple/squirrelmail
+mv squirrelmail /var/www/html/squirrelmail/
+mkdir -p /var/local/squirrelmail/data
+chown -Rf www-data: /var/local/squirrelmail/
+chmod -Rf 777 /var/local/squirrelmail/
+```
+
+```
+cd /var/www/html/squirrelmail/
+```
+
+```
+./configure
+```
+
+2 -> 1 -> kelompok5proxy.com -> s -> q
+
+```
+service dovecot restart
+/etc/init.d/apache2 restart
+/etc/init.d/postfix restart
+```
+
+menambahkan email
+
+```
+useradd anggi
+useradd daniel
+useradd geyl
+useradd meily
+useradd sebastian
+```
+
+```
+passwd anggi
+```
+
+```
+passwd daniel
+```
+
+```
+passwd geyl
+```
+
+```
+passwd meily
+```
+
+```
+passwd sebastian
+```
+
+```
+mkdir -p /var/www/html/anggi
+mkdir -p /var/www/html/daniel
+mkdir -p /var/www/html/geyl
+mkdir -p /var/www/html/meily
+mkdir -p /var/www/html/sebastian
+usermod -m -d /var/www/html/anggi anggi
+usermod -m -d /var/www/html/daniel daniel
+usermod -m -d /var/www/html/geyl geyl
+usermod -m -d /var/www/html/meily meily
+usermod -m -d /var/www/html/sebastian sebastian
+```
+
+```
+chown -R anggi:anggi /var/www/html/anggi
+chown -R daniel:daniel /var/www/html/daniel
+chown -R geyl:geyl /var/www/html/geyl
+chown -R meily:meily /var/www/html/meily
+chown -R sebastian:sebastian /var/www/html/sebastian
+```
+
+emailnya
+anggi@kelompok5proxy.com;
+daniel@kelompok5proxy.com;
+geyl@kelompok5proxy.com;
+meily@kelompok5proxy.com;
+sebastian@kelompok5proxy.com;
 
 
 # Install WEBSERVER LEMP (Linux NginX Mysql PHP)
 ### Install Apache    
+
 allow apache
 ```
-sudo ufw allow in "Apache"
-sudo ufw allow in "Apache Full"
+ufw allow in "Apache"
+ufw allow in "Apache Full"
 ```
 
 ### Install MYSQL
 ```
-sudo apt install mysql-server
+apt install mysql-server
 ```
 ```
 systemctl start mysql
 ```
 ```
-sudo mysql_secure_installation
+mysql_secure_installation
 ```
 ```
 y -> 0 -> y -> y -> y -> y -> y
@@ -247,71 +371,41 @@ password : server123
 
 coba buat database, tablenya dan isinya
 ```
-create database contoh;
-use contoh;
-create table contohnya(
+create database db_mahasiswa;
+use db_mahasiswa;
+create table mahasiswa(
 id int primary key auto_increment,
-isi varchar(100)
+nama varchar(100),
+nim varchar(9),
+email varchar(100)
 );
-insert into contohnya (isi) values ('satu'),('dua'),('tiga'),('empat'),('lima');
+insert into mahasiswa (nama, nim, email) values
+('Anggi Yohanes Pardede', '191402143', 'anggiyohanespdd@gmail.com'),
+('Daniel Situmeang', '191402140', 'dsitumeang47@gmail.com'),
+('Geylfedra Matthew Panggabean', '191402065', 'geylrillas@gmail.com'),
+('Meily Benedicta', '191402053', 'meilybenedicta2001@gmail.com'),
+('Sebastian Belmero Sitorus', '191402113', 'sebastian.belmero.1@gmail.com');
 exit;
 ```
 
-tes apakah php sudah bisa mengakses mysql
-```
-cd /var/www/html
-```
-
-```
-touch tes.php
-```
-
-```
-nano tes.php
-```
-
-```
-<?php
-$koneksi = mysqli_connect("localhost", "server", "server123", "contoh");
-$ambil = $koneksi -> query("select * from contohnya");
-while($pecah = $ambil -> fetch_assoc()){
-        print_r($pecah);
-}
-```
-
 ### Virtual host pada Apache
-```
-cd /var/www/html/
-```
-
-```
-wget https://github.com/BlackrockDigital/startbootstrap-landing-page/archive/gh-pages.zip
-```
-
-```
-unzip gh-pages.zip
-```
-
-```
-mv startbootstrap-landing-page-gh-pages/ website1
-```
 
 ```
 cd /etc/apache2/sites-available/
 ```
 ```
-touch website1.conf website2.conf
+touch website.conf squirrelmail.conf
 ```
 
 ```
-nano website1.conf
+nano website.conf
 ```
 
 ```
 <VirtualHost *:80>
-        ServerName aspal.com
-        ServerALias www.aspal.com
-        ServerAdmin webmaster@aspal.com
+        ServerName kelompok5proxy.com
+        ServerALias www.kelompok5proxy.com
+        ServerAdmin webmaster@kelompok5proxy.com
         DocumentRoot /var/www/html
         ErrorLog ${APACHE_LOG_DIR}/error.log
         CustomLog ${APACHE_LOG_DIR}/access.log combined
@@ -319,14 +413,14 @@ nano website1.conf
 ```
 
 ```
-nano website2.conf
+nano squirrelmail.conf
 ```
 
 ```
 <VirtualHost *:80>
-        ServerName aspal.com
-        ServerALias mail.aspal.com
-        ServerAdmin webmaster@aspal.com
+        ServerName kelompok5proxy.com
+        ServerALias mail.kelompok5proxy.com
+        ServerAdmin webmaster@kelompok5proxy.com
         DocumentRoot /var/www/html/squirrelmail
         ErrorLog ${APACHE_LOG_DIR}/error.log
         CustomLog ${APACHE_LOG_DIR}/access.log combined
@@ -334,95 +428,12 @@ nano website2.conf
 ```
 
 ```
-a2ensite website1.conf
-a2ensite website2.conf
+a2ensite website.conf
+a2ensite squirrelmail.conf
 ```
 
 ```
 systemctl reload apache2
-```
-
-
-
-
-# Install Mail Server (squirrelmail)
-
-install beberapa dependencies
-```
-sudo apt -y install software-properties-common
-sudo apt -y install python3-software-properties
-```
-
-tambahkan repo PHP
-```
-sudo add-apt-repository ppa:ondrej/php
-```
-
-update repo
-```
-sudo apt-get update
-```
-
-```
-sudo locale-gen id_ID.UTF-8
-```
-
-```
-apt -y install apache2 php php-xmlrpc php-mysql php-gd php-cli \
-php-curl dovecot-common dovecot-imapd \
-dovecot-pop3d postfix php-mbstring \
-php-xdebug libapache2-mod-php unzip
-```
-
-```
-internet with smarthost
-aspal.com
-smtp.telkom.net
-```
-
-```
-cd /usr/local/src
-git clone https://github.com/RealityRipple/squirrelmail
-unzip squirrelmail-webmail-1.4.22.zip
-mv squirrelmail-webmail-1.4.22 /var/www/html/squirrelmail/
-mkdir -p /var/local/squirrelmail/data
-chown -Rf www-data: /var/local/squirrelmail/
-chmod -Rf 777 /var/local/squirrelmail/
-```
-
-```
-cd /var/www/html/squirrelmail/
-```
-
-```
-./configure
-```
-
-2 -> 1 -> aspal.com -> s -> q
-
-```
-service dovecot restart
-/etc/init.d/apache2 restart
-/etc/init.d/postfix restart
-```
-
-menambahkan email
-
-```
-useradd myusername
-```
-
-```
-passwd myusername
-```
-
-```
-mkdir -p /var/www/html/myusername
-usermod -m -d /var/www/html/myusername myusername
-```
-
-```
-chown -R myusername:myusername /var/www/html/myusername
 ```
 
 
@@ -534,7 +545,7 @@ masukkan link yang akan di blokir
 .usu.ac.id
 
 ```
-/etc/squid/squid.conf
+nano /etc/squid/squid.conf
 ```
 
 cari http_access deny all
