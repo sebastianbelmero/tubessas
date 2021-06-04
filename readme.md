@@ -15,6 +15,8 @@ email : website2.conf
 ftp
 username : ftpuser
 
+IP client : 192.168.8.101
+
 # Install DNS Server
 login superuser
 ```
@@ -516,10 +518,35 @@ systemctl restart vsftpd
 
 
 # Proxy Server
-acl badurl dstdomain .aspal.com
+
+install squid
+
+```
+apt -y install squid
+```
+
+```
+touch /etc/squid/social.network
+nano /etc/squid/social.network
+```
+
+masukkan link yang akan di blokir
+.usu.ac.id
+
+```
+/etc/squid/squid.conf
+```
+
+cari http_access deny all
+
+```
+acl mypc src 192.168.8.101
+acl badurl dstdomain "/etc/squid/social.network"
 acl pagi time MTWHF 08:30-12:00
-acl siang time MTWHF 13:30-17:00
-acl malam time MTWHF 00:00-03:00
 http_access deny badurl pagi
-http_access deny badurl siang
-http_access allow badurl malam
+http_access allow mypc
+```
+
+```
+systemctl restart squid
+```
