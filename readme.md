@@ -1,6 +1,7 @@
-IP : 192.168.8.104
-reverse : 8.168.192
-link : kelompok5proxy.com
+IP : 192.168.81.133
+reverse : 81.168.192
+link : sebastian.com
+gateway : 192.168.81.1
 
 email : server
 password : server123
@@ -15,7 +16,7 @@ email : squirrelmail.conf
 ftp
 username : ftpuser
 
-IP client : 192.168.8.101
+IP client : 192.168.81.67
 
 ANGGI YOHANES PARDEDE 191402143
 DANIEL SITUMEANG 191402140
@@ -49,11 +50,11 @@ network:
   ethernets:
     enp0s3:
       dhcp4: false
-      addresses: [192.168.8.104/24]
-      gateway4: 192.168.8.1
+      addresses: [192.168.81.133/24]
+      gateway4: 192.168.81.1
       nameservers:
-        search: [kelompok5proxy.com]
-        addresses: [192.168.8.104, 192.168.8.1]
+        search: [sebastian.com]
+        addresses: [192.168.81.133, 192.168.81.1]
   version: 2
 ```
 
@@ -64,10 +65,10 @@ nano /etc/resolv.conf
 ```
 
 ```
-nameserver 192.168.8.104
-nameserver 192.168.8.1
+nameserver 192.168.81.133
+nameserver 192.168.81.1
 options edns0
-search kelompok5proxy.com
+search sebastian.com
 ```
 
 konfigurasi host
@@ -77,7 +78,7 @@ nano /etc/hosts
 ```
 
 ```
-192.168.8.104  kelompok5proxy.com
+192.168.81.133  sebastian.com
 ```
 
 tambahkan zone pada primary server
@@ -87,40 +88,40 @@ nano /etc/bind/named.conf.local
 ```
 
 ```
-zone "kelompok5proxy.com" {
+zone "sebastian.com" {
         type master;
-        file "/etc/bind/db.aspal";
+        file "/etc/bind/db.sebastian";
 };
 ```
 
 buat data file dengan cara copy template yang sudah ada
 
 ```
-cp /etc/bind/db.local /etc/bind/db.aspal
+cp /etc/bind/db.local /etc/bind/db.sebastian
 ```
 
 ```
-nano /etc/bind/db.aspal
+nano /etc/bind/db.sebastian
 ```
 
 ```
 ;
-; BIND data file for PT.Aspal
+; BIND data file for PT.sebastian
 ;
 $TTL    604800
-@       IN      SOA     ns.kelompok5proxy.com. root.kelompok5proxy.com. (
+@       IN      SOA     ns.sebastian.com. root.sebastian.com. (
                               2         ; Serial
                          604800         ; Refresh
                           86400         ; Retry
                         2419200         ; Expire
                          604800 )       ; Negative Cache TTL
 ;
-@       IN      NS      ns.kelompok5proxy.com.
-@       IN      A       192.168.8.104
-@       IN      MX      10      mail.kelompok5proxy.com.
-ns      IN      A       192.168.8.104
+@       IN      NS      ns.sebastian.com.
+@       IN      A       192.168.81.133
+@       IN      MX      10      mail.sebastian.com.
+ns      IN      A       192.168.81.133
 www     IN      CNAME   ns
-mail    IN      A       192.168.8.104
+mail    IN      A       192.168.81.133
 ```
 
 restart bind9
@@ -136,7 +137,7 @@ nano /etc/bind/named.conf.local
 ```
 
 ```
-zone "8.168.192.in-addr.arpa" {
+zone "81.168.192.in-addr.arpa" {
         type master;
         file "/etc/bind/db.192";
 };
@@ -154,20 +155,20 @@ nano /etc/bind/db.192
 
 ```
 ;
-; BIND reverse data file for PT.Aspal
+; BIND reverse data file for PT.sebastian
 ;
 $TTL    604800
-@       IN      SOA     ns.kelompok5proxy.com. root.kelompok5proxy.com. (
+@       IN      SOA     ns.sebastian.com. root.sebastian.com. (
                               2         ; Serial
                          604800         ; Refresh
                           86400         ; Retry
                         2419200         ; Expire
                          604800 )       ; Negative Cache TTL
 ;
-@       IN      NS      ns.kelompok5proxy.com.
-1       IN      PTR     ns.kelompok5proxy.com.
-1       IN      PTR     www.kelompok5proxy.com
-1       IN      PTR     mail.kelompok5proxy.com
+@       IN      NS      ns.sebastian.com.
+1       IN      PTR     ns.sebastian.com.
+1       IN      PTR     www.sebastian.com
+1       IN      PTR     mail.sebastian.com
 ```
 
 ```
@@ -194,18 +195,18 @@ systemctl restart bind9
 tes
 
 ```
-nslookup www.kelompok5proxy.com
+nslookup www.sebastian.com
 ```
 
 ```
-ping kelompok5proxy.com
+ping sebastian.com
 ```
 
 # Install Mail Server (squirrelmail)
 
 install beberapa dependencies
 ```
-apt -y install software-properties-common python3-software-properties
+apt -y install ca-certificates software-properties-common python3-software-properties
 ```
 
 tambahkan repo PHP
@@ -231,7 +232,7 @@ php-xdebug libapache2-mod-php unzip
 
 ```
 internet with smarthost
-kelompok5proxy.com
+sebastian.com
 smtp.telkom.net
 ```
 
@@ -252,7 +253,7 @@ cd /var/www/html/squirrelmail/
 ./configure
 ```
 
-2 -> 1 -> kelompok5proxy.com -> s -> q
+2 -> 1 -> sebastian.com -> s -> q
 
 ```
 service dovecot restart
@@ -312,14 +313,14 @@ chown -R sebastian:sebastian /var/www/html/sebastian
 ```
 
 emailnya
-anggi@kelompok5proxy.com;
-daniel@kelompok5proxy.com;
-geyl@kelompok5proxy.com;
-meily@kelompok5proxy.com;
-sebastian@kelompok5proxy.com;
+anggi@sebastian.com;
+daniel@sebastian.com;
+geyl@sebastian.com;
+meily@sebastian.com;
+sebastian@sebastian.com;
 
 
-# Install WEBSERVER LEMP (Linux NginX Mysql PHP)
+# Install LAMP (Linux Apache Mysql PHP)
 ### Install Apache    
 
 allow apache
@@ -403,9 +404,9 @@ nano website.conf
 
 ```
 <VirtualHost *:80>
-        ServerName kelompok5proxy.com
-        ServerALias www.kelompok5proxy.com
-        ServerAdmin webmaster@kelompok5proxy.com
+        ServerName sebastian.com
+        ServerALias www.sebastian.com
+        ServerAdmin webmaster@sebastian.com
         DocumentRoot /var/www/html
         ErrorLog ${APACHE_LOG_DIR}/error.log
         CustomLog ${APACHE_LOG_DIR}/access.log combined
@@ -418,9 +419,9 @@ nano squirrelmail.conf
 
 ```
 <VirtualHost *:80>
-        ServerName kelompok5proxy.com
-        ServerALias mail.kelompok5proxy.com
-        ServerAdmin webmaster@kelompok5proxy.com
+        ServerName sebastian.com
+        ServerALias mail.sebastian.com
+        ServerAdmin webmaster@sebastian.com
         DocumentRoot /var/www/html/squirrelmail
         ErrorLog ${APACHE_LOG_DIR}/error.log
         CustomLog ${APACHE_LOG_DIR}/access.log combined
@@ -481,7 +482,7 @@ usermod -d /var/www ftpuser
 chown ftpuser:ftpuser /var/www/html
 ```
 
-### Uplaod ke Folder Home
+### Upload ke Folder Home
 ```
 mkdir /home/ftpuser/ftp
 chown nobody:nogroup /home/ftpuser/ftp
@@ -551,7 +552,7 @@ nano /etc/squid/squid.conf
 cari http_access deny all
 
 ```
-acl mypc src 192.168.8.101
+acl mypc src 192.168.81.67
 acl badurl dstdomain "/etc/squid/social.network"
 acl pagi time MTWHF 08:30-12:00
 http_access deny badurl pagi
