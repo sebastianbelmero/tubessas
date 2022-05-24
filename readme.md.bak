@@ -209,6 +209,16 @@ install beberapa dependencies
 apt -y install ca-certificates software-properties-common python3-software-properties
 ```
 
+tambahkan repo PHP
+```
+add-apt-repository ppa:ondrej/php
+```
+
+update repo
+```
+apt-get update
+```
+
 ```
 locale-gen id_ID.UTF-8
 ```
